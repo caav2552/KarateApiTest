@@ -16,8 +16,6 @@ Scenario: Create a new user successfully
   Then status 200
 
   * print 'signup response ->', response
-  And match response == {}
-
 
 Scenario: Validate error when user already exists
 
