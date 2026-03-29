@@ -3,61 +3,38 @@ Feature: Signup API
 Background:
   * url 'https://api.demoblaze.com'
   * header Content-Type = 'application/json'
+  * def helpers = call read('classpath:utils/helpers.js')
 
-Scenario: Create new user successfully
+Scenario: Create a new user successfully
 
-  * def username = 'qa_user_' + new Date().getTime()
-  * def rawPassword = '12345'
-  * def encodedPassword = java.util.Base64.getEncoder().encodeToString(rawPassword.getBytes())
-
-  * def user =
-  """
-  {
-    "username": "#(username)",
-    "password": "#(encodedPassword)"
-  }
-  """
-
-  * print 'Creating user for signup test ->', user
+  * def user = helpers.generateUser('12345')
+  * print 'signup payload ->', user
 
   Given path '/signup'
   And request user
   When method POST
   Then status 200
 
-  * print 'Signup response ->', response
+  * print 'signup response ->', response
+  And match response == {}
 
 
-Scenario: Fail when user already exists
+Scenario: Validate error when user already exists
 
-  * def username = 'qa_user_' + new Date().getTime()
-  * def rawPassword = '12345'
-  * def encodedPassword = java.util.Base64.getEncoder().encodeToString(rawPassword.getBytes())
+  * def user = helpers.generateUser('12345')
+  * print 'signup payload ->', user
 
-  * def user =
-  """
-  {
-    "username": "#(username)",
-    "password": "#(encodedPassword)"
-  }
-  """
-
-  * print 'Preparing duplicate user scenario ->', user
-
-  # Create User First Time
+  # first creation
   Given path '/signup'
   And request user
   When method POST
   Then status 200
 
-  * print 'First creation response ->', response
-
-  # Verify User Already Exists
+  # duplicate attempt
   Given path '/signup'
   And request user
   When method POST
   Then status 200
 
-  * print 'Duplicate attempt response ->', response
-
+  * print 'duplicate signup response ->', response
   And match response.errorMessage == 'This user already exist.'
